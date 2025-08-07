@@ -37,7 +37,7 @@ fn compute_challenge(pubkey: Gej, commitment: Gej) -> Scalar {
     jet::scalar_normalize(jet::sha_256_ctx_8_finalize(ctx))
 }
 
-fn verify_proof_batchable(pubkey: Gej, commitment: Gej, response: Scalar) -> bool {
+fn verify_proof_batchable(response: Scalar, pubkey: Gej, commitment: Gej,) -> bool {
     let challenge: Scalar = compute_challenge(pubkey, commitment);
 
     let left_side: Gej = jet::generate(response); //response * G
@@ -48,7 +48,7 @@ fn verify_proof_batchable(pubkey: Gej, commitment: Gej, response: Scalar) -> boo
     jet::gej_equiv(left_side, right_side)
 }
 
-fn verify_proof_compact(pubkey: Gej, response: Scalar, challenge: Scalar) -> bool {
+fn verify_proof_compact(response: Scalar, pubkey: Gej, challenge: Scalar) -> bool {
     let R: Gej = jet::generate(response); //response * G
 
     let P: Gej = jet::scale(challenge, pubkey);
@@ -63,11 +63,11 @@ fn verify_proof_compact(pubkey: Gej, response: Scalar, challenge: Scalar) -> boo
 
 fn main() {
     //cannot use witness fields twice
-    //assert!(verify_proof_batchable(witness::U, witness::U_r, witness::response));
+    //assert!(verify_proof_batchable(witness::response, witness::U, witness::U_r,));
 
     assert!(verify_proof_compact(
-        witness::U,
         witness::response,
+        witness::U,
         witness::challenge
     ));
 }
