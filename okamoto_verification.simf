@@ -1,34 +1,89 @@
 // witness field
 mod witness {
-    const U: Gej = ((0x932567494a9aef314c07c5cd5035a0099dd66812931e238a65186aeb9fbfae66 , 0xeacd2ec10b7d986bff87a5b5df0dc5179def24a284059788c95c4e8378653e8d),1);
-    const U_r: Gej = ((0xa44c6938bcfc7937270f2011ad0beaf6270d7f8b213df04df3437dca3dd1a58a,0xc8a5b5e085d632a91ed03ff55081a5d5be7a354b5150bf1cb12dcb84f070c6ff), 1); 
-    
-    const alpha_z: Scalar = 0x4c992bcb16668ef7914f5bfc0bee71eb31f470a700bd0ee2c10b6578625e22c3;
-    const beta_z: Scalar = 0xd2af91ee0628540a0218b3683b079c520422e8894ddb7846493a31458c175d02;
+    const U: Gej = (
+        (
+            0x932567494a9aef314c07c5cd5035a0099dd66812931e238a65186aeb9fbfae66,
+            0xeacd2ec10b7d986bff87a5b5df0dc5179def24a284059788c95c4e8378653e8d,
+        ),
+        1,
+    );
+    const U_r: Gej = (
+        (
+            0xa44c6938bcfc7937270f2011ad0beaf6270d7f8b213df04df3437dca3dd1a58a,
+            0xc8a5b5e085d632a91ed03ff55081a5d5be7a354b5150bf1cb12dcb84f070c6ff,
+        ),
+        1,
+    );
 
-    const challenge: Scalar = 0xab26a4e75eec75544c0f44e937dcf5ee6355c7176600b9688c667e5c283b43c5;
+    const alpha_z: Scalar = 0x48f95c925697debb38f8a962902b8c067740bad223c4eac6b67161afce0dbe71;
+    const beta_z: Scalar = 0x3864eb54a1d7ed89de7e46020e127549b7984c49730756e4af9ba9ec62c9344e;
+
+    const challenge: Scalar = 0x6b45ca8ce95af67bc73d36056c8e8e6bf73438a3093583bf328fa808f42101e5;
 }
 
 // public arguments field
 mod param {
-    const H: Gej = ((0xe3a1c83902aeac083c62d753c1f8cd40d377b4a7e14f842c46da1deca80b02f8, 0x1e89563246aba368a5fe8b6e8a9dfd3335a5abc2aeed906d6a94bc6ee1356336), 1);
+    const H: Gej = (
+        (
+            0xe3a1c83902aeac083c62d753c1f8cd40d377b4a7e14f842c46da1deca80b02f8,
+            0x1e89563246aba368a5fe8b6e8a9dfd3335a5abc2aeed906d6a94bc6ee1356336,
+        ),
+        1,
+    );
 }
 
-fn verifyProof(point_to_prove: Gej, 
-              commitment: Gej, 
-              a_z: Scalar, 
-              b_z: Scalar, 
-              challenge: Scalar) -> bool {
-    
+fn compute_challenge(pubkey: Gej, commitment: Gej) -> Scalar {
+    let ctx: Ctx8 = jet::sha_256_ctx_8_init();
+
+    let (Tx, Ty): (u256, u256) = unwrap(jet::gej_normalize(commitment));
+    let (Yx, Yy): (u256, u256) = unwrap(jet::gej_normalize(pubkey));
+
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Tx);
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Ty);
+
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Yx);
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Yy);
+
+    jet::scalar_normalize(jet::sha_256_ctx_8_finalize(ctx))
+}
+
+fn verify_proof_batchable(response: (Scalar, Scalar), pubkey: Gej, commitment: Gej) -> bool {
+    let challenge: Scalar = compute_challenge(pubkey, commitment);
+
+    let (a_z, b_z): (Scalar, Scalar) = response;
     let left_side: Gej = jet::linear_combination_1((b_z, param::H), a_z); // = a_z * G + b_z * H
-    
-    let right_side: Gej = jet::scale(challenge, point_to_prove);
+
+    let right_side: Gej = jet::scale(challenge, pubkey);
     let right_side: Gej = jet::gej_add(commitment, right_side);
 
     jet::gej_equiv(left_side, right_side)
 }
 
+fn verify_proof_compact(response: (Scalar, Scalar), pubkey: Gej, challenge: Scalar) -> bool {
+    let (a_z, b_z): (Scalar, Scalar) = response;
+
+    let R: Gej = jet::linear_combination_1((b_z, param::H), a_z); //response * G
+
+    let P: Gej = jet::scale(challenge, pubkey);
+    let P: Gej = jet::gej_negate(P);
+
+    let commitment: Gej = jet::gej_add(R, P);
+
+    let challenge_computed: Scalar = compute_challenge(pubkey, commitment);
+
+    jet::eq_256(challenge, challenge_computed)
+}
 
 fn main() {
-    assert!(verifyProof(witness::U, witness::U_r, witness::alpha_z, witness::beta_z, witness::challenge))
+    // assert!(verify_proof_batchable(
+    //   (witness::alpha_z, witness::beta_z),
+    //   witness::U,
+    //   witness::U_r
+    // ));
+
+    assert!(verify_proof_compact(
+        (witness::alpha_z, witness::beta_z),
+        witness::U,
+        witness::challenge
+    ));
 }
