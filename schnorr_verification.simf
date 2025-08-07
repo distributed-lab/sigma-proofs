@@ -1,0 +1,29 @@
+mod param {}
+
+// witness field
+mod witness {
+    const U: Gej = ((0x5576d857765c186c5c0939c70e2e4fb9b80e8901a43e0e17e1122a45b834d764, 0x88c5f49d5a8c99b703e03ec10e887e92f5fc96f24ee1c91273c05e470e9a5944),1);
+    const U_r: Gej = ((0x7dcf988c19fb787e0d420eee458c6c232e83e020a54fc1ec7741121a686c318b, 0xa7eb844e5ea4adcb6867f511b2896cee3bdbc6bf1614905ba2e824ba6ce2e6b8), 1); 
+    
+    const response: Scalar = 0x4c992bcb16668ef7914f5bfc0bee71eb31f470a700bd0ee2c10b6578625e22c3;
+
+    const challenge: Scalar = 0xab26a4e75eec75544c0f44e937dcf5ee6355c7176600b9688c667e5c283b43c5;
+}
+
+fn verifyProof(point_to_prove: Gej, 
+              commitment: Gej, 
+              response: Scalar, 
+              challenge: Scalar) -> bool {
+    
+    let left_side: Gej = jet::generate(response); //response * G
+    
+    let right_side: Gej = jet::scale(challenge, point_to_prove);
+    let right_side: Gej = jet::gej_add(commitment, right_side);
+
+    jet::gej_equiv(left_side, right_side)
+}
+
+
+fn main() {
+    assert!(verifyProof(witness::U, witness::U_r, witness::response, witness::challenge))
+}
