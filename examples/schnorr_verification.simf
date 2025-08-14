@@ -1,0 +1,73 @@
+mod param {}
+
+// witness field
+mod witness {
+    const U: Gej = (
+        (
+            0x5576d857765c186c5c0939c70e2e4fb9b80e8901a43e0e17e1122a45b834d764,
+            0x88c5f49d5a8c99b703e03ec10e887e92f5fc96f24ee1c91273c05e470e9a5944,
+        ),
+        1,
+    );
+    const U_r: Gej = (
+        (
+            0x7dcf988c19fb787e0d420eee458c6c232e83e020a54fc1ec7741121a686c318b,
+            0xa7eb844e5ea4adcb6867f511b2896cee3bdbc6bf1614905ba2e824ba6ce2e6b8,
+        ),
+        1,
+    );
+
+    const response: Scalar = 0xf480c4fb9147f5dd4a3a29cf2eb4675f757b1333e48f901dca4b0b3119a9c3b2;
+
+    const challenge: Scalar = 0x060f38189630ccb42cfadef5ca4a45e2fa9ec6c686982072701f743c1df9e257;
+}
+
+fn compute_challenge(pubkey: Gej, commitment: Gej) -> Scalar {
+    let ctx: Ctx8 = jet::sha_256_ctx_8_init();
+
+    let (Tx, Ty): (u256, u256) = unwrap(jet::gej_normalize(commitment));
+    let (Yx, Yy): (u256, u256) = unwrap(jet::gej_normalize(pubkey));
+
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Tx);
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Ty);
+
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Yx);
+    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, Yy);
+
+    jet::scalar_normalize(jet::sha_256_ctx_8_finalize(ctx))
+}
+
+fn verify_proof_batchable(response: Scalar, pubkey: Gej, commitment: Gej) -> bool {
+    let challenge: Scalar = compute_challenge(pubkey, commitment);
+
+    let left_side: Gej = jet::generate(response); //response * G
+
+    let right_side: Gej = jet::scale(challenge, pubkey);
+    let right_side: Gej = jet::gej_add(commitment, right_side);
+
+    jet::gej_equiv(left_side, right_side)
+}
+
+fn verify_proof_compact(response: Scalar, pubkey: Gej, challenge: Scalar) -> bool {
+    let R: Gej = jet::generate(response); //response * G
+
+    let P: Gej = jet::scale(challenge, pubkey);
+    let P: Gej = jet::gej_negate(P);
+
+    let commitment: Gej = jet::gej_add(R, P); //response * G - challenge * Pubkey
+
+    let challenge_computed: Scalar = compute_challenge(pubkey, commitment);
+
+    jet::eq_256(challenge, challenge_computed)
+}
+
+fn main() {
+    //cannot use witness fields twice
+    //assert!(verify_proof_batchable(witness::response, witness::U, witness::U_r));
+
+    assert!(verify_proof_compact(
+        witness::response,
+        witness::U,
+        witness::challenge
+    ));
+}
