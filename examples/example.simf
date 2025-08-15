@@ -1,73 +1,39 @@
 mod witness {
     const challenge: Scalar =
-        32561484583765206132585725506869508275083077861304829401808913202858843777637;
+        76079921600172625841227013193223526848675225718990118529172758833198041956525;
     const x_r: Scalar =
-        96086005466044357371632058085277583440622885864038737906360927501019192596980;
+        65250272532514928625212504451703505485132270400975660596845266592891500596580;
     const r1_r: Scalar =
-        22168714594269954013075700399767957654748491624167472527683200164578691809202;
+        40625900171226647199004953476471869210723000065655569997098986400656057793321;
     const r2_r: Scalar =
-        99040778102740743514833510753686745234417683715912168859491220904191781443698;
-    const r3_r: Scalar =
-        73848646102437400226651130724209839935390656858372297117113078832362523390834;
-    const r4_r: Scalar =
-        64723515599523788070710713128647974214561686018493445860182274381225359555323;
+        7177867232998069979913028596193836896268967457459286456881769818603861550107;
 
     const A: Gej = (
         (
-            112381121880669624579196174008967162107688546444663154884697802229579662629476,
-            18032550511134402972584579259653538709456210538172583041557040363921031531521
+            110425132228045755865368506016428806583709496314906484912218358624957255142377,
+            100663101999611873373514841124501644381176635717649791716703058510469405630460
         ),
         1
     );
     const A_r: Gej = (
         (
-            74158379178919796548880049642882846500279886119874788868078763467893950118472,
-            37697291531489420298583774000178088454475268361051466598015651849240158588518
+            73531381981792542246172867102055406694930592900449254828142235261515238593633,
+            69124271499702732403513555678815458762801413341558690982198328443623580946053
         ),
         1
     );
 
     const B: Gej = (
         (
-            40415746966914227213768840510244882065009176656171018998006082188011224283466,
-            72548155331337243136330561175940636079170741230303899938793713231277465249682
+            59948879718777467256620177349254225418140997916012847484865415347635883695673,
+            38829494743395463042827203657809518582451355194269209079046960050171713839099
         ),
         1
     );
     const B_r: Gej = (
         (
-            34820132891962676461076531206813888831932681328088854915961396750137492937640,
-            108266023053240564662162438998023686657527131165916680113361819555565317714501
-        ),
-        1
-    );
-
-    const C: Gej = (
-        (
-            114991967730179441975586278157626419175774601181645415295453713998842852468980,
-            17971968641250515792700507509111162487448673453157302820591827224536172916005
-        ),
-        1
-    );
-    const C_r: Gej = (
-        (
-            111231087149061246019534581598795732896705046484936829513006849952701745778729,
-            77642677048657513831081692560580639459167527160220644715492285737078799676687
-        ),
-        1
-    );
-
-    const D: Gej = (
-        (
-            104093429241163160524026032776922940501672867144573538477133720912753290212488,
-            28918234769394234551835494517765062824688184162687333994726468749126442941666
-        ),
-        1
-    );
-    const D_r: Gej = (
-        (
-            3851238253694221612988445289462476335829925954491010170484321633466872851128,
-            19036478830418999072751924731464762266156028317629105601491110438825982979128
+            73654170524580798922940556795497459949942890146209997275430973313388306686004,
+            35109736567033858709620261124557037275879859610881348219271799707749825202476
         ),
         1
     );
@@ -83,43 +49,15 @@ mod param {
     );
     const H: Gej = (
         (
-            58181250397129771514352842062105291205452858903060582110419853911707640219346,
-            23262927801757215862837648068245254695970556260028942043096974854202773919170
-        ),
-        1
-    );
-    const P: Gej = (
-        (
-            65358246337163967018407428484287099700641879791046289187225795986629302327071,
-            72871290715050845352835075355223828687111964280198754072753611075746592955638
-        ),
-        1
-    );
-    const T: Gej = (
-        (
-            33993298566981579564751505531090504653721877386401203042727126587493792274219,
-            60217382953343310734197008385418071603244023442267645425674704274936550058455
-        ),
-        1
-    );
-    const M: Gej = (
-        (
-            92160852600898615591322824132804838805463741934545376436658926068654371035688,
-            83595448195598141925326275860852982798123321659836110693739122033414554908227
-        ),
-        1
-    );
-    const K: Gej = (
-        (
-            105287590235855914695027862024072238989130791757985110080166619800259490335798,
-            112854657839867003433369280391235372442898404353799351771369146861367090487879
+            11236042910693443396562549142412268574484138722337004402789503812037366240707,
+            47437054805956805922366037454516728935198867368076700184530077286185596903476
         ),
         1
     );
 }
-fn compute_challenge(instance: (Gej, Gej, Gej, Gej), commitments: (Gej, Gej, Gej, Gej)) -> Scalar {
-    let (A, B, C, D): (Gej, Gej, Gej, Gej) = instance;
-    let (A_r, B_r, C_r, D_r): (Gej, Gej, Gej, Gej) = commitments;
+fn compute_challenge(instance: (Gej, Gej), commitments: (Gej, Gej)) -> Scalar {
+    let (A, B): (Gej, Gej) = instance;
+    let (A_r, B_r): (Gej, Gej) = commitments;
     let ctx: Ctx8 = jet::sha_256_ctx_8_init();
     let (A_x, A_y): (u256, u256) = unwrap(jet::gej_normalize(A));
     let (A_r_x, A_r_y): (u256, u256) = unwrap(jet::gej_normalize(A_r));
@@ -135,38 +73,23 @@ fn compute_challenge(instance: (Gej, Gej, Gej, Gej), commitments: (Gej, Gej, Gej
     let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, B_r_x);
     let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, B_r_y);
 
-    let (C_x, C_y): (u256, u256) = unwrap(jet::gej_normalize(C));
-    let (C_r_x, C_r_y): (u256, u256) = unwrap(jet::gej_normalize(C_r));
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, C_x);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, C_y);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, C_r_x);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, C_r_y);
-
-    let (D_x, D_y): (u256, u256) = unwrap(jet::gej_normalize(D));
-    let (D_r_x, D_r_y): (u256, u256) = unwrap(jet::gej_normalize(D_r));
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, D_x);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, D_y);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, D_r_x);
-    let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, D_r_y);
-
     jet::scalar_normalize(jet::sha_256_ctx_8_finalize(ctx))
 }
 
 fn verify_proof_batchable(
-    public_vars: (Gej, Gej, Gej, Gej, Gej, Gej),
-    response: (Scalar, Scalar, Scalar, Scalar, Scalar),
-    instance: (Gej, Gej, Gej, Gej),
-    commitments: (Gej, Gej, Gej, Gej)
+    public_vars: (Gej, Gej),
+    response: (Scalar, Scalar, Scalar),
+    instance: (Gej, Gej),
+    commitments: (Gej, Gej)
 ) {
-    let (G, H, P, T, M, K): (Gej, Gej, Gej, Gej, Gej, Gej) = public_vars;
-    let (x_r, r1_r, r2_r, r3_r, r4_r): (Scalar, Scalar, Scalar, Scalar, Scalar) = response;
-    let (A, B, C, D): (Gej, Gej, Gej, Gej) = instance;
-    let (A_r, B_r, C_r, D_r): (Gej, Gej, Gej, Gej) = commitments;
+    let (G, H): (Gej, Gej) = public_vars;
+    let (x_r, r1_r, r2_r): (Scalar, Scalar, Scalar) = response;
+    let (A, B): (Gej, Gej) = instance;
+    let (A_r, B_r): (Gej, Gej) = commitments;
 
     let challenge: Scalar = compute_challenge(instance, commitments);
     let A_lhs: Gej = jet::scale(x_r, G);
     let A_lhs: Gej = jet::gej_add(jet::scale(r1_r, H), A_lhs);
-    let A_lhs: Gej = jet::gej_add(jet::scale(r3_r, T), A_lhs);
 
     let A_rhs: Gej = jet::scale(challenge, A);
     let A_rhs: Gej = jet::gej_add(A_r, A_rhs);
@@ -180,37 +103,19 @@ fn verify_proof_batchable(
     let B_rhs: Gej = jet::gej_add(B_r, B_rhs);
 
     assert!(jet::gej_equiv(B_lhs, B_rhs));
-
-    let C_lhs: Gej = jet::scale(r1_r, K);
-    let C_lhs: Gej = jet::gej_add(jet::scale(r4_r, T), C_lhs);
-
-    let C_rhs: Gej = jet::scale(challenge, C);
-    let C_rhs: Gej = jet::gej_add(C_r, C_rhs);
-
-    assert!(jet::gej_equiv(C_lhs, C_rhs));
-
-    let D_lhs: Gej = jet::scale(x_r, M);
-    let D_lhs: Gej = jet::gej_add(jet::scale(r3_r, K), D_lhs);
-    let D_lhs: Gej = jet::gej_add(jet::scale(r4_r, P), D_lhs);
-
-    let D_rhs: Gej = jet::scale(challenge, D);
-    let D_rhs: Gej = jet::gej_add(D_r, D_rhs);
-
-    assert!(jet::gej_equiv(D_lhs, D_rhs));
 }
 fn verify_proof_compact(
-    public_vars: (Gej, Gej, Gej, Gej, Gej, Gej),
-    response: (Scalar, Scalar, Scalar, Scalar, Scalar),
-    instance: (Gej, Gej, Gej, Gej),
+    public_vars: (Gej, Gej),
+    response: (Scalar, Scalar, Scalar),
+    instance: (Gej, Gej),
     challenge: Scalar
 ) {
-    let (G, H, P, T, M, K): (Gej, Gej, Gej, Gej, Gej, Gej) = public_vars;
-    let (x_r, r1_r, r2_r, r3_r, r4_r): (Scalar, Scalar, Scalar, Scalar, Scalar) = response;
-    let (A, B, C, D): (Gej, Gej, Gej, Gej) = instance;
+    let (G, H): (Gej, Gej) = public_vars;
+    let (x_r, r1_r, r2_r): (Scalar, Scalar, Scalar) = response;
+    let (A, B): (Gej, Gej) = instance;
 
     let A_lhs: Gej = jet::scale(x_r, G);
     let A_lhs: Gej = jet::gej_add(jet::scale(r1_r, H), A_lhs);
-    let A_lhs: Gej = jet::gej_add(jet::scale(r3_r, T), A_lhs);
 
     let A_rhs: Gej = jet::scale(challenge, A);
     let A_rhs: Gej = jet::gej_negate(A_rhs);
@@ -223,37 +128,14 @@ fn verify_proof_compact(
     let B_rhs: Gej = jet::gej_negate(B_rhs);
 
     let B_r: Gej = jet::gej_add(B_lhs, B_rhs);
-    let C_lhs: Gej = jet::scale(r1_r, K);
-    let C_lhs: Gej = jet::gej_add(jet::scale(r4_r, T), C_lhs);
-
-    let C_rhs: Gej = jet::scale(challenge, C);
-    let C_rhs: Gej = jet::gej_negate(C_rhs);
-
-    let C_r: Gej = jet::gej_add(C_lhs, C_rhs);
-    let D_lhs: Gej = jet::scale(x_r, M);
-    let D_lhs: Gej = jet::gej_add(jet::scale(r3_r, K), D_lhs);
-    let D_lhs: Gej = jet::gej_add(jet::scale(r4_r, P), D_lhs);
-
-    let D_rhs: Gej = jet::scale(challenge, D);
-    let D_rhs: Gej = jet::gej_negate(D_rhs);
-
-    let D_r: Gej = jet::gej_add(D_lhs, D_rhs);
-    let computed_challenge: Scalar = compute_challenge(instance, (A_r, B_r, C_r, D_r));
+    let computed_challenge: Scalar = compute_challenge(instance, (A_r, B_r));
     assert!(jet::eq_256(challenge, computed_challenge));
 }
 fn main() {
-    let public: (Gej, Gej, Gej, Gej, Gej, Gej) =
-        (param::G, param::H, param::P, param::T, param::M, param::K);
-    let response: (Scalar, Scalar, Scalar, Scalar, Scalar) = (
-        witness::x_r,
-        witness::r1_r,
-        witness::r2_r,
-        witness::r3_r,
-        witness::r4_r
-    );
-    let instance: (Gej, Gej, Gej, Gej) = (witness::A, witness::B, witness::C, witness::D);
-    let commitments: (Gej, Gej, Gej, Gej) =
-        (witness::A_r, witness::B_r, witness::C_r, witness::D_r);
+    let public: (Gej, Gej) = (param::G, param::H);
+    let response: (Scalar, Scalar, Scalar) = (witness::x_r, witness::r1_r, witness::r2_r);
+    let instance: (Gej, Gej) = (witness::A, witness::B);
+    let commitments: (Gej, Gej) = (witness::A_r, witness::B_r);
     verify_proof_batchable(public, response, instance, commitments);
     //verify_proof_compact(public, response, instance, witness::challenge);
 }

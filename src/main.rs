@@ -21,37 +21,24 @@ use ark_secp256k1::{Affine, Fq, Fr, Projective};
 use rand::thread_rng;
 
 use ark_std::rand::{rngs::StdRng, SeedableRng};
-define_proof! {random_example, (x, r1, r2, r3, r4), (A, B, C, D), (G, H, P, T, M, K) : A = (x * G + r1 * H + r3 * T), B = (x * G + r2 * H), C = (r1 * K + r4 * T), D = (x * M + r3 * K + r4 * P)}
+define_proof! {dleq, (x, r1, r2), (A, B), (G, H) : A = (x * G + r1 * H), B = (x * G + r2 * H)}
 
 fn main() {
-    let mut rng = rand::thread_rng();
+    let mut code = String::new();
+    let mut rng = StdRng::seed_from_u64(20);
 
     let G = Affine::generator();
     let H = Affine::rand(&mut rng);
-    let P = Affine::rand(&mut rng);
-    let T = Affine::rand(&mut rng);
-    let M = Affine::rand(&mut rng);
-    let K = Affine::rand(&mut rng);
 
     let x = Fr::rand(&mut rng);
     let r1 = Fr::rand(&mut rng);
     let r2 = Fr::rand(&mut rng);
-    let r3 = Fr::rand(&mut rng);
-    let r4 = Fr::rand(&mut rng);
-
-    let prover = random_example::ProveGenerator {
-        G: G,
-        H: H,
-        P: P,
-        T: T,
-        M: M,
-        K: K,
-
+    let prover = dleq::ProveGenerator {
         x: x,
         r1: r1,
         r2: r2,
-        r3: r3,
-        r4: r4
+        G: G,
+        H: H
     };
 
     let s = prover.generate_and_evaluate();
