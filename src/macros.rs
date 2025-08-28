@@ -93,196 +93,37 @@ macro_rules! define_proof {
 
         }
 
-        pub fn generate_template() -> String {
+        pub fn generate_template_batchable() -> String {
 
-            let mut code = String::new();
+            let SECRET_VARS = vec![$(stringify!($secret_var).to_string() + "_r"),+];
+            let INSTANCE_VARS = vec![$(stringify!($instance_var).to_string()),+];
+            let COMMON_VARS = vec![$(stringify!($common_var).to_string()),*];
 
-
-            let mut public_var_tuple = String::new();
-            let mut response_var_tuple = String::new();
-            let mut instance_var_tuple = String::new();
-
-            public_var_tuple.push_str("(");
-            $(
-                let _ = stringify!($common_var);
-                public_var_tuple.push_str("Gej,");
-            )*
-            public_var_tuple.push_str(")");
-
-            response_var_tuple.push_str("(");
-            $(
-                let _ = stringify!($secret_var);
-                response_var_tuple.push_str("Scalar,");
-            )*
-            response_var_tuple.push_str(")");
-
-            instance_var_tuple.push_str("(");
-            $(
-                let _ = stringify!($instance_var);
-                instance_var_tuple.push_str("Gej,");
-            )*
-            instance_var_tuple.push_str(")");
-
-            code.push_str("fn compute_challenge(");
-
-            code.push_str(&format!("instance: {},", instance_var_tuple));
-            code.push_str(&format!("commitments: {}) -> Scalar {{\n", instance_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{},", stringify!($instance_var)));
-            )*
-            code.push_str(&format!("): {} = instance;\n", instance_var_tuple));
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{}_r,", stringify!($instance_var)));
-            )*
-            code.push_str(&format!("): {} = commitments;\n", instance_var_tuple));
-
-            code.push_str(" let ctx: Ctx8 = jet::sha_256_ctx_8_init();\n");
-
-
-            $(
-                code.push_str(&format!("let ({x}_x, {x}_y): (u256, u256) = unwrap(jet::gej_normalize({x}));\n", x = stringify!($instance_var)));
-                code.push_str(&format!("let ({x}_r_x, {x}_r_y): (u256, u256) = unwrap(jet::gej_normalize({x}_r));\n", x = stringify!($instance_var)));
-
-                code.push_str(&format!("let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, {}_x);\n", stringify!($instance_var)));
-                code.push_str(&format!("let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, {}_y);\n", stringify!($instance_var)));
-
-                code.push_str(&format!("let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, {}_r_x);\n", stringify!($instance_var)));
-                code.push_str(&format!("let ctx: Ctx8 = jet::sha_256_ctx_8_add_32(ctx, {}_r_y);\n\n", stringify!($instance_var)));
-            )*
-
-            code.push_str(" jet::scalar_normalize(jet::sha_256_ctx_8_finalize(ctx))\n}\n\n");
-
-
-            //fn verify batchable
-            code.push_str("fn verify_proof_batchable(\n");
-
-            code.push_str(&format!("public_vars: {},", public_var_tuple));
-            code.push_str(&format!("response: {},", response_var_tuple));
-            code.push_str(&format!("instance: {},", instance_var_tuple));
-            code.push_str(&format!("commitments: {}) {{\n", instance_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{},", stringify!($common_var)));
-            )*
-            code.push_str(&format!("): {} = public_vars;\n", public_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{}_r,", stringify!($secret_var)));
-            )*
-            code.push_str(&format!("): {} = response;\n", response_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{},", stringify!($instance_var)));
-            )*
-            code.push_str(&format!("): {} = instance;\n", instance_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{}_r,", stringify!($instance_var)));
-            )*
-            code.push_str(&format!("): {} = commitments;\n\n", instance_var_tuple));
-
-            code.push_str("let challenge: Scalar = compute_challenge(instance,commitments);\n");
-
-            $(
-                let terms = __divide_into_terms!(@external $statement);
-                code.push_str(&generate_constraint_code(terms, stringify!($lhs).to_string()));
-
-                let point_name = stringify!($lhs);
-                code.push_str(&format!(
-                    "\nlet {point_name}_rhs: Gej = jet::scale(challenge, {point_name});\n"
-                ));
-                code.push_str(&format!(
-                    "let {point_name}_rhs: Gej = jet::gej_add({point_name}_r, {point_name}_rhs);\n\n"
-                ));
-
-                code.push_str(&format!(
-                    "assert!(jet::gej_equiv({point_name}_lhs, {point_name}_rhs));\n\n\n"
-                ));
-            )*
-            code.push_str("}\n");
-
-            code.push_str("fn verify_proof_compact(\n");
-
-            code.push_str(&format!("public_vars: {},", public_var_tuple));
-            code.push_str(&format!("response: {},", response_var_tuple));
-            code.push_str(&format!("instance: {},", instance_var_tuple));
-            code.push_str("challenge: Scalar) {\n");
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{},", stringify!($common_var)));
-            )*
-            code.push_str(&format!("): {} = public_vars;\n", public_var_tuple));
-
-            code.push_str("let (");
-            $(
-               code.push_str(&format!("{}_r,", stringify!($secret_var)));
-            )*
-            code.push_str(&format!("): {} = response;\n", response_var_tuple));
-
-            code.push_str("let (");
-            $(code.push_str(&format!("{},", stringify!($instance_var)));)*
-
-            code.push_str(&format!("): {} = instance;\n\n", instance_var_tuple));
-
-            $(
-                let terms = __divide_into_terms!(@external $statement);
-                code.push_str(&generate_constraint_code(terms, stringify!($lhs).to_string()));
-
-                let point_name = stringify!($lhs);
-                code.push_str(&format!(
-                    "\nlet {point_name}_rhs: Gej = jet::scale(challenge, {point_name});\n"
-                ));
-                code.push_str(&format!(
-                    "let {point_name}_rhs: Gej = jet::gej_negate({point_name}_rhs);\n\n"
-                ));
-
-                code.push_str(&format!(
-                    "let {point_name}_r: Gej = jet::gej_add({point_name}_lhs, {point_name}_rhs);"
-                ));
-            )*
-
-            code.push_str("let computed_challenge: Scalar = compute_challenge(instance, (");
-            $(
-            code.push_str(&format!("{}_r,", stringify!($instance_var)));
-            )*
-            code.push_str("));\n");
-
-
-            code.push_str("assert!(jet::eq_256(challenge, computed_challenge));\n}");
-
-            code.push_str("fn main() {\n");
-            code.push_str(&format!("let public: {} = (\n", public_var_tuple));
-            $(code.push_str(&format!("param::{},", stringify!($common_var)));)*
-            code.push_str(");\n");
-
-            code.push_str(&format!("let response: {} = (\n", response_var_tuple));
-            $(code.push_str(&format!("witness::{}_r,", stringify!($secret_var)));)*
-            code.push_str(");\n");
-
-            code.push_str(&format!("let instance: {} = (\n", instance_var_tuple));
-            $(code.push_str(&format!("witness::{},", stringify!($instance_var)));)*
-            code.push_str(");\n");
-
-            code.push_str(&format!("let commitments: {} = (\n", instance_var_tuple));
-            $(code.push_str(&format!("witness::{}_r,", stringify!($instance_var)));)*
-            code.push_str(");\n");
-
-            code.push_str("verify_proof_batchable(public, response, instance, commitments);\n");
-            code.push_str("//verify_proof_compact(public, response, instance, witness::challenge);\n");
-
-            code.push_str("}\n");
-
-            code
+            template_generator_batchable(
+                Variables{
+                    common_var: COMMON_VARS,
+                    instance_var: INSTANCE_VARS,
+                    secret_var: SECRET_VARS
+                },
+                vec![$((__divide_into_terms!(@external $statement), stringify!($lhs).to_string()),)*]
+                )
         }
 
+        pub fn generate_template_compact() -> String {
+
+            let SECRET_VARS = vec![$(stringify!($secret_var).to_string() + "_r"),+];
+            let INSTANCE_VARS = vec![$(stringify!($instance_var).to_string()),+];
+            let COMMON_VARS = vec![$(stringify!($common_var).to_string()),*];
+
+            template_generator_batchable(
+                Variables{
+                    common_var: COMMON_VARS,
+                    instance_var: INSTANCE_VARS,
+                    secret_var: SECRET_VARS
+                },
+                vec![$((__divide_into_terms!(@external $statement), stringify!($lhs).to_string()),)*]
+                )
+        }
         pub struct SecretVariables{
             $(pub $secret_var: Fr,)*
         }
@@ -305,15 +146,20 @@ macro_rules! define_proof {
             let mut hasher = Sha256::new();
 
             $(
+                // println!("{}", hex::encode(instance_variables.$instance_var.x().unwrap().into_bigint().to_bytes_be()));
+                // println!("{}", hex::encode(instance_variables.$instance_var.y().unwrap().into_bigint().to_bytes_be()));
                 hasher.update(instance_variables.$instance_var.x().unwrap().into_bigint().to_bytes_be());
                 hasher.update(instance_variables.$instance_var.y().unwrap().into_bigint().to_bytes_be());
 
+                // println!("{}", hex::encode(instance_variables_rand.$instance_var.x().unwrap().into_bigint().to_bytes_be()));
+                // println!("{}", hex::encode(instance_variables_rand.$instance_var.y().unwrap().into_bigint().to_bytes_be()));
                 hasher.update(instance_variables_rand.$instance_var.x().unwrap().into_bigint().to_bytes_be());
                 hasher.update(instance_variables_rand.$instance_var.y().unwrap().into_bigint().to_bytes_be());
             )*
 
             let result: [u8; 32] = hasher.finalize().into();
 
+            // println!("{}", hex::encode(result));
             Fr::from(BigUint::from_bytes_be(&result))
         }
 
@@ -354,7 +200,7 @@ macro_rules! define_proof {
 
 
                 code.push_str(&generate_template_header(s, instance_variables, instance_variables_rand, common_variables, challenge));
-                code.push_str(&generate_template());
+                code.push_str(&generate_template_batchable());
                 code
 
             }
